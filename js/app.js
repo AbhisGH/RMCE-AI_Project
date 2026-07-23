@@ -867,14 +867,49 @@ function renderSlider() {
     list.innerHTML = '<div class="sidebar-empty">No prompts yet</div>';
     return;
   }
-  list.innerHTML = history.map((entry, i) => `
-    <button class="sidebar-item${activeSidebarIndex === i ? ' active' : ''}" onclick="viewHistory(${i})" title="${escHtml(entry.title)}">
-      <div class="sidebar-item-icon">${liveIcon(entry)}</div>
-      <div class="sidebar-item-body">
-        <div class="sidebar-item-title">${escHtml(entry.title)}</div>
-        <div class="sidebar-item-meta">${formatTimeAgo(entry.generatedAt)}</div>
-      </div>
-    </button>`).join('');
+
+  const grouped = {};
+  CATEGORIES.forEach(cat => { grouped[cat.key] = []; });
+
+  history.forEach((entry, i) => {
+    const cat = entry.category || 'Other';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push({ entry, i });
+  });
+
+  let html = '';
+  CATEGORIES.forEach(cat => {
+    const items = grouped[cat.key];
+    if (!items || !items.length) return;
+    html += `<div class="sidebar-section-label">${cat.label}</div>`;
+    items.forEach(({ entry, i }) => {
+      html += `
+        <div class="sidebar-item-wrap">
+          <button class="sidebar-item${activeSidebarIndex === i ? ' active' : ''}" onclick="viewHistory(${i})" title="${escHtml(entry.title)}">
+            <div class="sidebar-item-icon">${liveIcon(entry)}</div>
+            <div class="sidebar-item-body">
+              <div class="sidebar-item-title">${escHtml(entry.title)}</div>
+              <div class="sidebar-item-meta">${formatTimeAgo(entry.generatedAt)}</div>
+            </div>
+          </button>
+          <button class="btn-delete-history" onclick="deleteHistory(${i})" title="Delete">&#x2715;</button>
+        </div>`;
+    });
+  });
+
+  list.innerHTML = html;
+}
+
+function deleteHistory(index) {
+  const history = loadHistory();
+  history.splice(index, 1);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  if (activeSidebarIndex === index) {
+    activeSidebarIndex = -1;
+  } else if (activeSidebarIndex > index) {
+    activeSidebarIndex--;
+  }
+  renderSlider();
 }
 
 function viewHistory(index) {
