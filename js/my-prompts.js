@@ -27,28 +27,87 @@ function saveMyPromptsAll(list) {
   localStorage.setItem(MY_PROMPTS_KEY, JSON.stringify(list));
 }
 
+// ─── FILTER STATE ─────────────────────────────────────────────────────────────
+let filterSearch = '';
+let filterCat    = '';
+let filterSort   = 'newest';
+
+function applyFilters(prompts) {
+  const q = filterSearch.toLowerCase();
+  let result = prompts.filter(p => {
+    if (q && !p.heading.toLowerCase().includes(q)) return false;
+    if (filterCat && p.category !== filterCat) return false;
+    return true;
+  });
+  if (filterSort === 'oldest') result = [...result].sort((a, b) => a.createdAt - b.createdAt);
+  else if (filterSort === 'az')  result = [...result].sort((a, b) => a.heading.localeCompare(b.heading));
+  else if (filterSort === 'za')  result = [...result].sort((a, b) => b.heading.localeCompare(a.heading));
+  else result = [...result].sort((a, b) => b.createdAt - a.createdAt);
+  return result;
+}
+
+function hasActiveFilter() {
+  return filterSearch || filterCat || filterSort !== 'newest';
+}
+
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 function renderMyPromptsPage() {
-  const prompts = loadMyPrompts();
-  const container = document.getElementById('my-prompts-app');
+  const allPrompts = loadMyPrompts();
+  const container  = document.getElementById('my-prompts-app');
+
+  const filtersHtml = `
+    <div class="my-prompts-filters">
+      <div class="mp-search-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="mp-search" id="mp-search" type="search" placeholder="Search by heading…" value="${escHtml(filterSearch)}" oninput="onFilterChange()">
+      </div>
+      <select class="mp-select" id="mp-cat" onchange="onFilterChange()">
+        <option value="">All categories</option>
+        <option value="Presentations &amp; Meetings"${filterCat === 'Presentations & Meetings' ? ' selected' : ''}>Presentations &amp; Meetings</option>
+        <option value="Analysis &amp; Deep Dive"${filterCat === 'Analysis & Deep Dive' ? ' selected' : ''}>Analysis &amp; Deep Dive</option>
+        <option value="Training Guide"${filterCat === 'Training Guide' ? ' selected' : ''}>Training Guide</option>
+      </select>
+      <select class="mp-select" id="mp-sort" onchange="onFilterChange()">
+        <option value="newest"${filterSort === 'newest' ? ' selected' : ''}>Newest first</option>
+        <option value="oldest"${filterSort === 'oldest' ? ' selected' : ''}>Oldest first</option>
+        <option value="az"${filterSort === 'az' ? ' selected' : ''}>A → Z</option>
+        <option value="za"${filterSort === 'za' ? ' selected' : ''}>Z → A</option>
+      </select>
+      ${hasActiveFilter() ? `<button class="mp-clear" onclick="clearFilters()">Clear filters</button>` : ''}
+    </div>`;
+
+  const filtered = applyFilters(allPrompts);
 
   let listHtml = '';
-  if (!prompts.length) {
+  if (!allPrompts.length) {
     listHtml = `
       <div class="my-prompts-empty">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <p>No prompts yet</p>
         <span>Click the + button to create your first prompt.</span>
       </div>`;
+  } else if (!filtered.length) {
+    listHtml = `
+      <div class="my-prompts-empty">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>No results</p>
+        <span>Try adjusting your search or filters.</span>
+      </div>`;
   } else {
-    listHtml = `<div class="my-prompts-list">` +
-      prompts.map((p, i) => `
-        <div class="my-prompt-row" onclick="openViewMyPrompt(${i})">
+    const countHtml = hasActiveFilter()
+      ? `<div class="mp-results-count">${filtered.length} of ${allPrompts.length} prompt${allPrompts.length !== 1 ? 's' : ''}</div>`
+      : '';
+    listHtml = countHtml + `<div class="my-prompts-list">` +
+      filtered.map((p) => {
+        const realIndex = allPrompts.indexOf(p);
+        return `
+        <div class="my-prompt-row" onclick="openViewMyPrompt(${realIndex})">
           <div class="my-prompt-row-name">${escHtml(p.heading)}</div>
           <div class="my-prompt-row-cat">${escHtml(p.category)}</div>
           <div class="my-prompt-row-date">${formatDate(p.createdAt)}</div>
-          <button class="btn-delete-my-prompt" onclick="deleteMyPrompt(event,${i})" title="Delete">&#x2715;</button>
-        </div>`).join('') +
+          <button class="btn-delete-my-prompt" onclick="deleteMyPrompt(event,${realIndex})" title="Delete">&#x2715;</button>
+        </div>`;
+      }).join('') +
       `</div>`;
   }
 
@@ -60,7 +119,27 @@ function renderMyPromptsPage() {
         New Prompt
       </button>
     </div>
+    ${allPrompts.length ? filtersHtml : ''}
     ${listHtml}`;
+}
+
+function onFilterChange() {
+  filterSearch = (document.getElementById('mp-search')?.value  || '').trim();
+  filterCat    =  document.getElementById('mp-cat')?.value     || '';
+  filterSort   =  document.getElementById('mp-sort')?.value    || 'newest';
+  renderMyPromptsPage();
+  // Restore focus so typing in the search box doesn't lose cursor
+  if (filterSearch !== '') {
+    const el = document.getElementById('mp-search');
+    if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }
+}
+
+function clearFilters() {
+  filterSearch = '';
+  filterCat    = '';
+  filterSort   = 'newest';
+  renderMyPromptsPage();
 }
 
 function deleteMyPrompt(e, index) {
