@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Prompts — Dot Prompt Builder</title>
+<link rel="icon" type="image/png" href="source/images.png">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a class="nav-brand" href="index.html">
+      <svg class="nav-logo" viewBox="0 0 30 30" fill="none">
+        <rect x="2" y="2" width="26" height="26" rx="7" stroke="#8BD400" stroke-width="1.7"/>
+        <line x1="8" y1="10" x2="22" y2="10" stroke="#8BD400" stroke-width="1.7" stroke-linecap="round"/>
+        <line x1="8" y1="15" x2="18" y2="15" stroke="#8BD400" stroke-width="1.7" stroke-linecap="round"/>
+        <line x1="8" y1="20" x2="13" y2="20" stroke="#8BD400" stroke-width="1.7" stroke-linecap="round"/>
+        <polyline points="17,19 20,23 22,17" stroke="#8BD400" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span class="nav-brand-text">Dot Prompt Builder</span>
+      <span class="v1-badge">V1</span>
+    </a>
+  </div>
+  <div class="nav-right">
+    <a class="btn-back-nav" href="index.html">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7H2M6 3L2 7l4 4"/></svg>
+      Back
+    </a>
+    <a class="btn-dotai-nav" href="https://eu.getdot.ai" target="_blank" rel="noopener">
+      <svg class="icon" viewBox="0 0 14 14"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+      Open DOT AI
+    </a>
+  </div>
+</nav>
+
+<!-- MY PROMPTS CONTENT -->
+<div id="my-prompts-app"></div>
+
+<!-- CREATE MY PROMPT MODAL -->
+<div class="create-prompt-overlay" id="create-prompt-overlay">
+  <div class="create-prompt-modal" id="create-prompt-modal">
+    <div class="modal-header">
+      <div class="modal-header-top">
+        <div class="modal-title">Create Prompt</div>
+        <button class="modal-close" onclick="closeCreatePrompt()" aria-label="Close">&#x2715;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <div class="field-label">Heading *</div>
+        <input type="text" id="cp-heading" placeholder="e.g. My Q3 Pricing Analysis">
+        <div class="create-error" id="cp-heading-err">Heading is required.</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Category *</div>
+        <select id="cp-category">
+          <option value="" disabled selected>Select a category…</option>
+          <option value="Presentations &amp; Meetings">Presentations &amp; Meetings</option>
+          <option value="Analysis &amp; Deep Dive">Analysis &amp; Deep Dive</option>
+          <option value="Training Guide">Training Guide</option>
+        </select>
+        <div class="create-error" id="cp-category-err">Please select a category.</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Prompt Text *</div>
+        <textarea id="cp-text" placeholder="Paste or type your prompt here…"></textarea>
+        <div class="create-error" id="cp-text-err">Prompt text is required.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeCreatePrompt()">Cancel</button>
+      <button class="btn-save-prompt" onclick="saveMyPrompt()">Save Prompt</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MY PROMPT MODAL -->
+<div class="view-my-prompt-overlay" id="view-my-prompt-overlay">
+  <div class="view-my-prompt-modal" id="view-my-prompt-modal">
+    <div class="modal-header">
+      <div class="modal-header-top">
+        <div class="modal-title" id="vmp-title"></div>
+        <button class="modal-close" onclick="closeViewMyPrompt()" aria-label="Close">&#x2715;</button>
+      </div>
+    </div>
+    <div class="modal-body" id="vmp-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<footer>Flix Prompt Builder &mdash; Revenue Management Command Excellence &bull; V1</footer>
+
+<script src="js/my-prompts.js"></script>
+</body>
+</html>
